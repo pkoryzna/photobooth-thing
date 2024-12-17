@@ -4,11 +4,12 @@ import pygame
 import pygame.camera
 from pygame.locals import *
 
+PHOTOS_TO_TAKE = 4
 
 SCREEN_WIDTH = 600
 SCREEN_HEIGHT = 1000
 
-IMAGE_HEIGHT = SCREEN_HEIGHT // 4
+IMAGE_HEIGHT = SCREEN_HEIGHT // PHOTOS_TO_TAKE
 
 PREFERRED_CAMERAS = [
     "HP 320 FHD Webcam",
@@ -18,6 +19,8 @@ PREFERRED_CAMERAS = [
 
 CAMERA_WIDTH = 1280
 CAMERA_HEIGHT = 720
+
+COUNTDOWN_TIMER_EVENT_TYPE = pygame.event.custom_type()
 
 
 def _find_camera_name() -> str | int:
@@ -52,15 +55,26 @@ def main():
 
 def capture_loop(camera, display_surface):
     captured_images = []
-    while len(captured_images) != 4:
-        # Handle special events and keep event queue alive
+    capturing = False
+    countdown_beeps = 0
+    while len(captured_images) != PHOTOS_TO_TAKE:
+        # Handle events and keep event queue alive
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    take_camera_shot(camera, captured_images, display_surface)
-                continue
+            match event.type:
+                case pygame.QUIT:
+                    return
+                case pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE and not capturing:
+                        pygame.time.set_timer(COUNTDOWN_TIMER_EVENT_TYPE, 1000)
+                        capturing = True
+                case b if b == COUNTDOWN_TIMER_EVENT_TYPE and capturing:
+                    countdown_beeps += 1
+                    if countdown_beeps % 4 == 0:
+                        take_camera_shot(camera, captured_images, display_surface)
+                    else:
+                        display_surface.fill(pygame.color.Color(200, 0, 0))
+                        pygame.display.flip()
+                        pygame.time.wait(100)
 
         display_surface.fill(pygame.Color(0, 0, 0))
         live_frame = capture_camera_image(camera)
