@@ -2,7 +2,8 @@ import sys
 
 import pygame
 import pygame.camera
-from pygame.locals import *
+
+from one_bit_photo.image_operations import convert_to_1bit, surface_to_image, image_to_surface, crop_middle_square
 
 PHOTOS_TO_TAKE = 4
 
@@ -110,15 +111,9 @@ def capture_camera_image(camera):
     scaled = pygame.transform.smoothscale(
         square_crop, size=(IMAGE_HEIGHT, IMAGE_HEIGHT)
     )
-    return scaled
+    dithered_pil = convert_to_1bit(surface_to_image(scaled))
 
-
-def crop_middle_square(camera_image):
-    left = max((camera_image.get_width() - camera_image.get_height()) / 2, 0)
-    top = max((camera_image.get_height() - camera_image.get_width()) / 2, 0)
-    min_dim = min(camera_image.get_width(), camera_image.get_height())
-    square_crop = camera_image.subsurface(Rect(left, top, min_dim, min_dim))
-    return square_crop
+    return image_to_surface(dithered_pil)
 
 
 def printing_animation_loop(
