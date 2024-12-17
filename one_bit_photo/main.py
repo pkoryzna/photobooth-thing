@@ -24,7 +24,7 @@ def _find_camera_name() -> str | int:
     cameras = pygame.camera.list_cameras()
     if not cameras:
         raise RuntimeError("No cameras found")
-    for preferred_cam in PREFERRED_CAMERAS:
+    for preferred_cam in set(PREFERRED_CAMERAS):
         if preferred_cam in cameras:
             return preferred_cam
     return cameras[0]
@@ -40,13 +40,14 @@ def main():
     pygame.init()
     display_surface = pygame.display.set_mode(
         (SCREEN_WIDTH, SCREEN_HEIGHT),
+        vsync=1
     )
     pygame.camera.init()
     camera = find_camera()
 
     camera.start()
-
     images = capture_loop(camera, display_surface)
+    camera.stop()
     printing_animation_loop(images, display_surface)
 
 def capture_loop(camera, display_surface):
@@ -57,7 +58,8 @@ def capture_loop(camera, display_surface):
             if event.type == pygame.QUIT:
                 return
             if event.type == pygame.KEYDOWN:
-                take_camera_shot(camera, captured_images, display_surface)
+                if event.key == pygame.K_SPACE:
+                    take_camera_shot(camera, captured_images, display_surface)
                 continue
 
         display_surface.fill(pygame.Color(0, 0, 0))
@@ -115,12 +117,13 @@ def printing_animation_loop(
     blit_images_vertical(images_surface, captured_images)
     top_offset = 0.0
     clock = pygame.time.Clock()
-    while top_offset < SCREEN_HEIGHT + 100:
+    while top_offset < SCREEN_HEIGHT + 1:
+        pygame.event.pump()  # keep the event queue alive
         dest_rect = display_surface.get_rect()
         dest_rect.top += round(top_offset)
         display_surface.fill(pygame.Color(0, 0, 0))
         display_surface.blit(images_surface, dest=dest_rect)
-        millis = clock.tick(60)
+        millis = clock.tick()
         top_offset += millis * PIXEL_PER_MS
         pygame.display.flip()
 
