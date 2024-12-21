@@ -1,10 +1,13 @@
 from typing import Literal
 
 import PIL.Image
+import pygame
+import pygame.camera
 from PIL import Image
 from pygame import Surface
 import pygame.image
 from pygame.locals import Rect
+
 
 PIXEL_FORMAT: Literal["RGB"] = "RGB"
 
@@ -38,3 +41,28 @@ def crop_middle_square(camera_image: pygame.Surface) -> pygame.Surface:
     min_dim = min(camera_image.get_width(), camera_image.get_height())
     square_crop = camera_image.subsurface(Rect(left, top, min_dim, min_dim))
     return square_crop
+
+
+def capture_camera_image(
+    camera: pygame.camera.Camera, target_resolution: int
+) -> pygame.Surface:
+    # Get a frame from camera and crop the middle
+    camera_image = camera.get_image()
+    square_crop = crop_middle_square(camera_image)
+
+    downsample = 1
+    image_pil = surface_to_image(square_crop)
+    downsampled = image_pil.resize(
+        (target_resolution // downsample, target_resolution // downsample),
+        PIL.Image.Resampling.BILINEAR,
+    )
+    dithered_pil = convert_to_1bit(downsampled)
+
+    if downsample != 1:
+        # Scale to target resolution
+        rescaled = dithered_pil.resize(
+            (target_resolution, target_resolution), PIL.Image.Resampling.NEAREST
+        )
+        return image_to_surface(rescaled)
+    return image_to_surface(dithered_pil)
+

@@ -3,14 +3,14 @@ import sys
 import pygame
 import pygame.camera
 
-from one_bit_photo.image_operations import convert_to_1bit, surface_to_image, image_to_surface, crop_middle_square
+from one_bit_photo.image_operations import capture_camera_image
 
 PHOTOS_TO_TAKE = 4
 
-SCREEN_WIDTH = 600
-SCREEN_HEIGHT = 1000
+SCREEN_WIDTH = 600 // 1.5
+SCREEN_HEIGHT = 1600 // 1.5
 
-IMAGE_HEIGHT = SCREEN_HEIGHT // PHOTOS_TO_TAKE
+IMAGE_DISPLAY_HEIGHT = SCREEN_HEIGHT // PHOTOS_TO_TAKE
 
 PREFERRED_CAMERAS = [
     "HP 320 FHD Webcam",
@@ -20,6 +20,11 @@ PREFERRED_CAMERAS = [
 
 CAMERA_WIDTH = 1280
 CAMERA_HEIGHT = 720
+
+# 62 mm endless label width px
+PRINT_WIDTH_PX = 696
+
+FPS = 60
 
 COUNTDOWN_TIMER_EVENT_TYPE = pygame.event.custom_type()
 
@@ -42,10 +47,7 @@ def find_camera():
 
 def main():
     pygame.init()
-    display_surface = pygame.display.set_mode(
-        (SCREEN_WIDTH, SCREEN_HEIGHT),
-        vsync=1
-    )
+    display_surface = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), vsync=1)
     pygame.camera.init()
     camera = find_camera()
 
@@ -53,6 +55,7 @@ def main():
     images = capture_loop(camera, display_surface)
     camera.stop()
     printing_animation_loop(images, display_surface)
+
 
 def capture_loop(camera, display_surface):
     captured_images = []
@@ -64,10 +67,11 @@ def capture_loop(camera, display_surface):
             match event.type:
                 case pygame.QUIT:
                     return
-                case pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE and not capturing:
-                        pygame.time.set_timer(COUNTDOWN_TIMER_EVENT_TYPE, 1000)
-                        capturing = True
+                case pygame.KEYDOWN if event.key == pygame.K_SPACE and not capturing:
+                    pygame.time.set_timer(COUNTDOWN_TIMER_EVENT_TYPE, 1000)
+                    capturing = True
+                case pygame.KEYDOWN if event.key == pygame.K_RETURN:
+                    take_camera_shot(camera, captured_images, display_surface)
                 case b if b == COUNTDOWN_TIMER_EVENT_TYPE and capturing:
                     countdown_beeps += 1
                     if countdown_beeps % 4 == 0:
@@ -78,20 +82,30 @@ def capture_loop(camera, display_surface):
                         pygame.time.wait(100)
 
         display_surface.fill(pygame.Color(0, 0, 0))
-        live_frame = capture_camera_image(camera)
+        live_frame = capture_camera_image(camera, PRINT_WIDTH_PX)
         images_to_display = [*captured_images, live_frame]
-        blit_images_vertical(display_surface, images_to_display)
+        blit_images_vertical(display_surface, images_to_display, PHOTOS_TO_TAKE)
     return captured_images
 
 
-def blit_images_vertical(dest_surface: pygame.Surface, images_to_display: list[pygame.Surface]):
-    """Display images in a vertical column in the middle of the display"""
+def blit_images_vertical(
+    dest_surface: pygame.Surface,
+    images_to_display: list[pygame.Surface],
+    total_images_count: int | None = None,
+):
+    """Display images in a vertical column in the middle of the dest_surface"""
+    if total_images_count is None:
+        total_images_count = len(images_to_display)
+
+    new_height = dest_surface.get_height() // total_images_count
     for image_no, image in enumerate(images_to_display):
-        dest_rect = image.get_rect()
-        dest_rect.top = image_no * IMAGE_HEIGHT
+        new_width = image.get_width() * new_height // image.get_height()
+        scaled = pygame.transform.smoothscale(image, (new_width, new_height))
+        dest_rect = scaled.get_rect()
+        dest_rect.top = image_no * new_height
         display_rect = dest_surface.get_rect()
         dest_rect.centerx = display_rect.centerx
-        dest_surface.blit(image, dest=dest_rect)
+        dest_surface.blit(scaled, dest=dest_rect)
     pygame.display.flip()
 
 
@@ -100,42 +114,47 @@ def take_camera_shot(camera, captured_images, display_surface):
     display_surface.fill(pygame.Color(255, 255, 255))
     pygame.display.flip()
     pygame.time.wait(100)
-    captured_images.append(capture_camera_image(camera))
+    captured_images.append(capture_camera_image(camera, PRINT_WIDTH_PX))
 
 
-def capture_camera_image(camera):
-    # Get a frame from camera and crop the middle
-    camera_image = camera.get_image()
-    square_crop = crop_middle_square(camera_image)
-    # Scale to target resolution
-    scaled = pygame.transform.smoothscale(
-        square_crop, size=(IMAGE_HEIGHT, IMAGE_HEIGHT)
-    )
-    dithered_pil = convert_to_1bit(surface_to_image(scaled))
-
-    return image_to_surface(dithered_pil)
+def ease_in_out_cubic(x):
+    if x < 0.5:
+        return 4 * x * x * x
+    else:
+        return 1 - (-2 * x + 2) ** 3 / 2
 
 
 def printing_animation_loop(
     captured_images: list[pygame.Surface], display_surface: pygame.Surface
 ):
-    TOTAL_ANIM_TIME = 2000
-    PIXEL_PER_MS = SCREEN_HEIGHT / TOTAL_ANIM_TIME
-    images_surface = pygame.Surface((display_surface.get_width(), display_surface.get_height()))
+    TOTAL_ANIM_TIME = 1000
+
+    images_surface = pygame.Surface(
+        (display_surface.get_width(), display_surface.get_height())
+    )
 
     blit_images_vertical(images_surface, captured_images)
     top_offset = 0.0
     clock = pygame.time.Clock()
-    while top_offset < SCREEN_HEIGHT + 1:
-        pygame.event.pump()  # keep the event queue alive
+    total_ms_progress = 0
+    while top_offset <= SCREEN_HEIGHT:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return
+
+        total_ms_progress += clock.tick(FPS)
+        top_offset = (
+            ease_in_out_cubic(total_ms_progress / TOTAL_ANIM_TIME) * 2 * SCREEN_HEIGHT
+        )
+
         dest_rect = display_surface.get_rect()
         dest_rect.top += round(top_offset)
         display_surface.fill(pygame.Color(0, 0, 0))
         display_surface.blit(images_surface, dest=dest_rect)
-        millis = clock.tick()
-        top_offset += millis * PIXEL_PER_MS
+
         pygame.display.flip()
 
+    pygame.time.wait(1000)
 
 
 if __name__ == "__main__":
