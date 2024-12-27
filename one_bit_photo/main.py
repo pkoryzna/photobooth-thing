@@ -48,7 +48,7 @@ def find_camera():
 
 def main():
     pygame.init()
-    display_surface = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), vsync=1)
+    display_surface = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN, vsync=1)
     pygame.camera.init()
     camera = find_camera()
     printer = discover_printer()
