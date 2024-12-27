@@ -6,7 +6,7 @@ import pygame.camera
 from one_bit_photo.image_operations import capture_camera_image, surface_to_image, enhance_for_print
 from one_bit_photo.printer import print_image, discover_printer
 
-PHOTOS_TO_TAKE = 4
+PHOTOS_TO_TAKE = 1
 
 SCREEN_WIDTH = 600
 SCREEN_HEIGHT = 1600

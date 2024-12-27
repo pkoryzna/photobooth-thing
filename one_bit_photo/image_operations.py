@@ -67,5 +67,7 @@ def capture_camera_image(
     return image_to_surface(dithered_pil)
 
 
-def enhance_for_print(image: Image, brightness_factor: float):
-    return ImageEnhance.Brightness(image).enhance(brightness_factor)
+def enhance_for_print(image: Image, brightness_factor: float, contrast_factor: float):
+    contr =  ImageEnhance.Contrast(image).enhance(contrast_factor)
+    bright = ImageEnhance.Brightness(contr).enhance(brightness_factor)
+    return bright
