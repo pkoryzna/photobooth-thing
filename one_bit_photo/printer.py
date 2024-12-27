@@ -15,5 +15,8 @@ def print_image(images, label_type, printer_instance):
 def discover_printer():
     printers = list_available_devices()
     print(f"Found printers: {printers}", file=sys.stderr)
+    if not printers:
+        raise IndexError("No printer found!")
+        # return None
     printer = printers[0]["instance"]
     return printer

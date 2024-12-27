@@ -52,14 +52,16 @@ def main():
     pygame.camera.init()
     camera = find_camera()
     printer = discover_printer()
-    camera.start()
-    images = capture_loop(camera, display_surface)
-    camera.stop()
-    printing_animation_loop(images, display_surface)
+    while true:
+        camera.start()
+        images = capture_loop(camera, display_surface)
+        camera.stop()
+        printing_animation_loop(images, display_surface)
 
-    printout_surface = pygame.Surface((PRINT_WIDTH_PX, PRINT_WIDTH_PX * len(images)))
-    blit_images_vertical(printout_surface, images)
-    print_image([surface_to_image(printout_surface)], label_type="62", printer_instance=printer)
+        printout_surface = pygame.Surface((PRINT_WIDTH_PX, PRINT_WIDTH_PX * len(images)))
+        blit_images_vertical(printout_surface, images)
+        print_image([surface_to_image(printout_surface)], label_type="62", printer_instance=printer)
+
 
 
 def capture_loop(camera, display_surface):
@@ -72,6 +74,9 @@ def capture_loop(camera, display_surface):
             match event.type:
                 case pygame.QUIT:
                     return
+                case pygame.MOUSEBUTTONUP:
+                    pygame.time.set_timer(COUNTDOWN_TIMER_EVENT_TYPE, 1000)
+                    capturing = True
                 case pygame.KEYDOWN if event.key == pygame.K_SPACE and not capturing:
                     pygame.time.set_timer(COUNTDOWN_TIMER_EVENT_TYPE, 1000)
                     capturing = True
