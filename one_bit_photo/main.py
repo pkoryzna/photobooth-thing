@@ -3,7 +3,7 @@ import sys
 import pygame
 import pygame.camera
 
-from one_bit_photo.image_operations import capture_camera_image, surface_to_image
+from one_bit_photo.image_operations import capture_camera_image, surface_to_image, enhance_for_print
 from one_bit_photo.printer import print_image, discover_printer
 
 PHOTOS_TO_TAKE = 4
@@ -60,7 +60,10 @@ def main():
 
         printout_surface = pygame.Surface((PRINT_WIDTH_PX, PRINT_WIDTH_PX * len(images)))
         blit_images_vertical(printout_surface, images)
-        print_image([surface_to_image(printout_surface)], label_type="62", printer_instance=printer)
+
+        printout_image = enhance_for_print(surface_to_image(printout_surface), brightness_factor=1.2)
+
+        print_image([printout_image], label_type="62", printer_instance=printer)
 
 
 

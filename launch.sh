@@ -6,7 +6,7 @@ while true; do
     (
     source $HOME/photobooth-thing/env/bin/activate
     export DISPLAY=:0
-#    unclutter
+    unclutter &
     cd $HOME/photobooth-thing/
     python3 -m one_bit_photo.main
     )

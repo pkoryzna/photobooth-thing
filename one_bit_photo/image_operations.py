@@ -3,7 +3,7 @@ from typing import Literal
 import PIL.Image
 import pygame
 import pygame.camera
-from PIL import Image
+from PIL import Image, ImageEnhance
 from pygame import Surface
 import pygame.image
 from pygame.locals import Rect
@@ -66,3 +66,6 @@ def capture_camera_image(
         return image_to_surface(rescaled)
     return image_to_surface(dithered_pil)
 
+
+def enhance_for_print(image: Image, brightness_factor: float):
+    return ImageEnhance.Brightness(image).enhance(brightness_factor)
