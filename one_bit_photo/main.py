@@ -3,7 +3,12 @@ import sys
 import pygame
 import pygame.camera
 
-from one_bit_photo.image_operations import capture_camera_image, surface_to_image, enhance_for_print
+from one_bit_photo.image_operations import (
+    capture_camera_image,
+    surface_to_image,
+    enhance_for_print,
+    convert_to_1bit,
+)
 from one_bit_photo.printer import print_image, discover_printer
 
 PHOTOS_TO_TAKE = 4
@@ -48,7 +53,9 @@ def find_camera():
 
 def main():
     pygame.init()
-    display_surface = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN, vsync=1)
+    display_surface = pygame.display.set_mode(
+        (SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN, vsync=1
+    )
     pygame.camera.init()
     camera = find_camera()
     printer = discover_printer()
@@ -58,13 +65,20 @@ def main():
         camera.stop()
         printing_animation_loop(images, display_surface)
 
-        printout_surface = pygame.Surface((PRINT_WIDTH_PX, PRINT_WIDTH_PX * len(images)))
+        printout_surface = pygame.Surface(
+            (PRINT_WIDTH_PX, PRINT_WIDTH_PX * len(images))
+        )
         blit_images_vertical(printout_surface, images)
 
-        printout_image = enhance_for_print(surface_to_image(printout_surface), brightness_factor=4.20, contrast_factor=0.9)
+        printout_image = convert_to_1bit(
+            enhance_for_print(
+                surface_to_image(printout_surface),
+                brightness_factor=1.5,
+                contrast_factor=0.9,
+            )
+        )
 
         print_image([printout_image], label_type="62", printer_instance=printer)
-
 
 
 def capture_loop(camera, display_surface):
@@ -95,7 +109,7 @@ def capture_loop(camera, display_surface):
                         pygame.time.wait(100)
 
         display_surface.fill(pygame.Color(0, 0, 0))
-        live_frame = capture_camera_image(camera, PRINT_WIDTH_PX)
+        live_frame = convert_to_1bit(capture_camera_image(camera, PRINT_WIDTH_PX))
         images_to_display = [*captured_images, live_frame]
         blit_images_vertical(display_surface, images_to_display, PHOTOS_TO_TAKE)
     return captured_images

@@ -50,21 +50,9 @@ def capture_camera_image(
     camera_image = camera.get_image()
     square_crop = crop_middle_square(camera_image)
 
-    downsample = 1
     image_pil = surface_to_image(square_crop)
-    downsampled = image_pil.resize(
-        (target_resolution // downsample, target_resolution // downsample),
-        PIL.Image.Resampling.BILINEAR,
-    )
-    dithered_pil = convert_to_1bit(downsampled)
 
-    if downsample != 1:
-        # Scale to target resolution
-        rescaled = dithered_pil.resize(
-            (target_resolution, target_resolution), PIL.Image.Resampling.NEAREST
-        )
-        return image_to_surface(rescaled)
-    return image_to_surface(dithered_pil)
+    return image_to_surface(image_pil)
 
 
 def enhance_for_print(image: Image, brightness_factor: float, contrast_factor: float):
