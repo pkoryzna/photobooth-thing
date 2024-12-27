@@ -7,7 +7,8 @@ from one_bit_photo.image_operations import (
     capture_camera_image,
     surface_to_image,
     enhance_for_print,
-    convert_to_1bit, image_to_surface,
+    convert_to_1bit,
+    image_to_surface,
 )
 from one_bit_photo.printer import print_image, discover_printer
 
@@ -74,7 +75,6 @@ def main():
             enhance_for_print(
                 surface_to_image(printout_surface),
                 brightness_factor=1.5,
-                contrast_factor=0.9,
             )
         )
 
@@ -109,13 +109,15 @@ def capture_loop(camera, display_surface):
                         pygame.time.wait(100)
 
         display_surface.fill(pygame.Color(0, 0, 0))
-        live_frame = dither_surface(capture_camera_image(camera, PRINT_WIDTH_PX))
-        images_to_display = [*captured_images, live_frame]
+        live_frame = capture_camera_image(camera, PRINT_WIDTH_PX)
+        images_to_display = [dither_surface(s) for s in [*captured_images, live_frame]]
         blit_images_vertical(display_surface, images_to_display, PHOTOS_TO_TAKE)
     return captured_images
 
+
 def dither_surface(surf):
     return image_to_surface(convert_to_1bit(surface_to_image(surf)))
+
 
 def blit_images_vertical(
     dest_surface: pygame.Surface,
@@ -143,7 +145,7 @@ def take_camera_shot(camera, captured_images, display_surface):
     display_surface.fill(pygame.Color(255, 255, 255))
     pygame.display.flip()
     pygame.time.wait(100)
-    captured_images.append(dither_surface(capture_camera_image(camera, PRINT_WIDTH_PX)))
+    captured_images.append(capture_camera_image(camera, PRINT_WIDTH_PX))
 
 
 def ease_in_out_cubic(x):
