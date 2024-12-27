@@ -23,7 +23,7 @@ CAMERA_WIDTH = 1280
 CAMERA_HEIGHT = 720
 
 # 62 mm endless label width px
-PRINT_WIDTH_PX = 600
+PRINT_WIDTH_PX = 696
 
 FPS = 60
 
