@@ -52,7 +52,7 @@ def main():
     pygame.camera.init()
     camera = find_camera()
     printer = discover_printer()
-    while true:
+    while True:
         camera.start()
         images = capture_loop(camera, display_surface)
         camera.stop()
