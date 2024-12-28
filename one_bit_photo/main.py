@@ -59,8 +59,15 @@ def main():
     )
     pygame.camera.init()
     camera = find_camera()
-    printer = discover_printer()
+
     while True:
+        printer = discover_printer()
+        if not printer:
+            error_image = pygame.image.load("printer_error.png").convert()
+            display_surface.blit(error_image, (0, 0))
+            pygame.time.wait(1000)
+            continue
+
         camera.start()
         images = capture_loop(camera, display_surface)
         camera.stop()
