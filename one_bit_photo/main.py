@@ -168,6 +168,7 @@ def printing_animation_loop(
     )
 
     blit_images_vertical(images_surface, captured_images)
+    images_surface = dither_surface(images_surface)
     top_offset = 0.0
     clock = pygame.time.Clock()
     total_ms_progress = 0
