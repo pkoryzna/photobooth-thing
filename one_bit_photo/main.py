@@ -1,7 +1,9 @@
 import sys
 
 import pygame
+import pygame.image
 import pygame.camera
+
 
 from one_bit_photo.image_operations import (
     capture_camera_image,
