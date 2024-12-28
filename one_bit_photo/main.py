@@ -94,6 +94,9 @@ def capture_loop(camera, display_surface):
                 case pygame.MOUSEBUTTONUP:
                     pygame.time.set_timer(COUNTDOWN_TIMER_EVENT_TYPE, 1000)
                     capturing = True
+                    display_surface.fill(pygame.color.Color(200, 0, 0))
+                    pygame.display.flip()
+                    pygame.time.wait(100)
                 case pygame.KEYDOWN if event.key == pygame.K_SPACE and not capturing:
                     pygame.time.set_timer(COUNTDOWN_TIMER_EVENT_TYPE, 1000)
                     capturing = True
