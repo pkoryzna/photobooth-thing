@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -xeuo pipefail
+
+python3 -m venv env
+source env/bin/activate
+pip install -r requirements.txt
+mkdir -p ~/.config/systemd/user/
+cp one-bit-photo.service ~/.config/systemd/user/
+systemctl enable one-bit-photo.service
+crontab ./crontab
+systemctl start --user one-bit-photo.service
